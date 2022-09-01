@@ -10,3 +10,4 @@ p.innerHTML = calculate(1, 2).toString();
 fragment.appendChild(p);
 
 root?.appendChild(fragment);
+

@@ -1,44 +1,35 @@
+'use strict';
 process.env.NODE_ENV = 'development';
 
 const paths = require('./paths');
-// const fs = require('fs');
-// const cssLoader = require('css-loader');
+const path = require('path');
+const fs = require('fs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin');
-// const _cssLoader = require('css-loader!style-loader?minimize!./main.css');
-// const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
-// const useTypeScript = fs.existsSync(paths.appTsConfig);
-const cssRegex = /\.css$/i;
-// const cssModuleRegex = /\.module\.css$/i;
-// const sassRegex = /\.s(c|a)ss$/i;
-// const sassModuleRegex = /\.module\.s(c|a)ss$/i;
-const tsRegx = /\.(ts|tsx)?$/i;
 
+const useTypeScript = fs.existsSync(paths.appTsConfig);
+const cssRegex = /\.css$/i;
+const jsRegex = /\.js(x)?$/i;
+const tsRegx = /\.ts(x)?$/i;
 const isEnvProduction = process.env.NODE_ENV === 'production';
 const isEnvDevelopment = process.env.NODE_ENV === 'development';
 
 module.exports = {
-  mode: isEnvProduction 
-    ? 'production' 
-    : isEnvDevelopment && 'development',
-  // devTool: isEnvProduction 
-  //   ? shouldUseSourceMap 
-  //     ? 'source-map'
-  //     : false
-  //   : isEnvDevelopment && 'cheap-module-source-map',
+  mode: 'development',
   entry: paths.appIndexJs,
   output: {
     path: paths.appBuild,
     filename: isEnvProduction
-      ? 'static/js/[name].[contenthash:8].js'
-      : isEnvDevelopment && 'static/js/bundle.js',
+      ? 'js/[name].[contenthash:8].js'
+      : isEnvDevelopment && 'js/bundle.js',
     chunkFilename: isEnvProduction 
-      ? 'static/js/[name].[contenthash:8].chunk.js'
-      : isEnvDevelopment && 'static/js/[name].chunk.js',
+      ? 'js/[name].[contenthash:8].chunk.js'
+      : isEnvDevelopment && 'js/[name].chunk.js',
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js', 'json'],
+    modules: [path.resolve(__dirname, 'node_modules')],
   },
   module: {
     rules: [
@@ -48,10 +39,24 @@ module.exports = {
           MiniCssExtractPlugin.loader, 
           'css-loader',
         ],
+        exclude: /node_modules/,
       },
-      {
+      useTypeScript ? {
         test: tsRegx,
-        use: 'ts-loader',
+        use: ['ts-loader'],
+        include: path.resolve(__dirname, 'src'),
+        exclude: /node_modules/,
+      } : null,
+      // useTypeScript ? {
+      //   test: tsRegx,
+      //   use: ['tslint-loader'],
+      //   exclude: /node_modules/,
+      //   enforce: 'pre',
+      // } : null,
+      {
+        test: jsRegex,
+        use: ['babel-loader?cacheDirectory'],
+        include: path.resolve(__dirname, 'src'),
         exclude: /node_modules/,
       },
     ],
@@ -66,7 +71,7 @@ module.exports = {
         : isEnvDevelopment && 'css/[name].css',
     }),
     new HtmlWebpackPlugin({
-      template: './public/index.html',
+      template: paths.appHtml,
       inject: 'body',
     }),
   ],
